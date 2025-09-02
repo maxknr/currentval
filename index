@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interest Value Calculator</title>
+    <!-- Use Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg space-y-6 transform transition-transform duration-300 hover:scale-[1.01]">
+        <h1 class="text-3xl font-bold text-center text-blue-400">Interest Value Calculator</h1>
+        <p class="text-center text-gray-400">Calculate the future value of a deposit based on compounding interest.</p>
+
+        <!-- Input fields for the initial amount breakdown -->
+        <div class="space-y-4">
+            <div>
+                <label for="exGrBal" class="block text-sm font-medium text-gray-300 mb-1">Ex Gratia Balance (₹)</label>
+                <input type="text" id="exGrBal" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., 500">
+            </div>
+
+            <div>
+                <label for="fandFAbl" class="block text-sm font-medium text-gray-300 mb-1">F&F Balance (₹)</label>
+                <input type="text" id="fandFAbl" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., 300">
+            </div>
+
+            <div>
+                <label for="grat" class="block text-sm font-medium text-gray-300 mb-1">Gratuity (₹)</label>
+                <input type="text" id="grat" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., 200">
+            </div>
+            
+            <p class="text-lg font-bold text-gray-300">
+                Total: ₹<span id="totalAmount" class="font-bold">0.00</span>
+            </p>
+            <p id="totalAmountWords" class="text-xs text-green-400 italic font-bold mt-2"></p>
+        </div>
+        
+        <!-- RT Date moved here as requested with default value -->
+        <div>
+            <label for="startDate" class="block text-sm font-medium text-gray-300 mb-1">RT Date</label>
+            <input type="date" id="startDate" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="2022-04-01">
+        </div>
+
+        <!-- Existing input fields -->
+        <h2 class="text-2xl font-bold text-center text-blue-400 pt-6">Current Value</h2>
+        <div>
+            <label for="rate" class="block text-sm font-medium text-gray-300 mb-1">Annual Interest Rate (%)</label>
+            <input type="number" id="rate" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., 5.25">
+        </div>
+
+        <div>
+            <label for="compounding" class="block text-sm font-medium text-gray-300 mb-1">Compounding Frequency</label>
+            <select id="compounding" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                <option value="annually">Annually</option>
+                <option value="semiannually">Semi-Annually</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="daily">Daily</option>
+            </select>
+        </div>
+
+        <!-- Calculation buttons and results display -->
+        <button id="calculate-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
+            Calculate Current Value
+        </button>
+
+        <div id="results" class="hidden bg-gray-700 p-6 rounded-lg text-center space-y-4">
+            <h2 class="text-xl font-semibold text-gray-200">Current Value</h2>
+            <p class="text-4xl font-extrabold text-green-400">
+                ₹<span id="futureValue" class="font-extrabold">0.00</span>
+            </p>
+            <p class="text-lg text-gray-400">
+                Total Interest Earned: ₹<span id="interestEarned" class="font-bold text-yellow-400">0.00</span>
+            </p>
+            <p id="futureValueWords" class="text-xs text-green-400 italic mt-2 font-bold"></p>
+        </div>
+
+        <!-- Section for the Monthly Withdrawal calculation -->
+        <div class="space-y-4">
+            <h2 class="text-2xl font-bold text-center text-blue-400 pt-6">Monthly Interest Withdrawal</h2>
+            <p class="text-sm font-medium text-gray-300 mb-1 text-center">Calculated using the above Annual Interest Rate.</p>
+
+            <button id="calculate-monthly-btn" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
+                Calculate Monthly Withdrawal
+            </button>
+        </div>
+        
+        <div id="monthlyResults" class="hidden bg-gray-700 p-6 rounded-lg text-center space-y-4">
+            <h2 class="text-xl font-semibold text-gray-200">Monthly Withdrawal</h2>
+            <p class="text-lg text-gray-400">
+                Monthly Withdrawal Amount: ₹<span id="monthlyWithdrawalAmount">0.00</span>
+            </p>
+            <p class="text-2xl font-extrabold text-green-400">
+                Total Interest Earned: ₹<span id="totalInterestEarned">0.00</span>
+            </p>
+            <p id="totalInterestWords" class="text-xs text-green-400 italic mt-2 font-bold"></p>
+        </div>
+
+        <!-- New section for the Post Office Monthly Income Scheme (POMIS) calculation -->
+        <div class="space-y-4">
+            <h2 class="text-2xl font-bold text-center text-blue-400 pt-6">Post Office MIS</h2>
+            <p class="text-center text-gray-400">Current Annual Rate: 7.4%</p>
+
+            <button id="calculate-pomis-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105">
+                Calculate POMIS Interest
+            </button>
+        </div>
+        
+        <div id="pomisResults" class="hidden bg-gray-700 p-6 rounded-lg text-center space-y-4">
+            <h2 class="text-xl font-semibold text-gray-200">POMIS Interest</h2>
+            <p class="text-lg text-gray-400">
+                Monthly Interest: ₹<span id="pomisMonthlyAmount">0.00</span>
+            </p>
+            <p class="text-2xl font-extrabold text-green-400">
+                Total Interest Earned: ₹<span id="pomisTotalAmount">0.00</span>
+            </p>
+            <p id="pomisTotalWords" class="text-xs text-green-400 italic mt-2 font-bold"></p>
+        </div>
+
+        <div id="message" class="hidden text-center text-sm font-medium text-red-400 mt-4"></div>
+    </div>
+
+    <script>
+        // Get references to all necessary elements
+        const exGrBalInput = document.getElementById('exGrBal');
+        const fandFAblInput = document.getElementById('fandFAbl');
+        const gratInput = document.getElementById('grat');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const totalAmountWordsSpan = document.getElementById('totalAmountWords');
+        const rateInput = document.getElementById('rate');
+        const startDateInput = document.getElementById('startDate');
+        const compoundingSelect = document.getElementById('compounding');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultsDiv = document.getElementById('results');
+        const futureValueSpan = document.getElementById('futureValue');
+        const interestEarnedSpan = document.getElementById('interestEarned');
+        const futureValueWordsSpan = document.getElementById('futureValueWords');
+        
+        // New elements for Monthly Withdrawal calculation
+        const calculateMonthlyBtn = document.getElementById('calculate-monthly-btn');
+        const monthlyResultsDiv = document.getElementById('monthlyResults');
+        const monthlyWithdrawalAmountSpan = document.getElementById('monthlyWithdrawalAmount');
+        const totalInterestEarnedSpan = document.getElementById('totalInterestEarned');
+        const totalInterestWordsSpan = document.getElementById('totalInterestWords');
+
+        // New elements for POMIS calculation
+        const calculatePomisBtn = document.getElementById('calculate-pomis-btn');
+        const pomisResultsDiv = document.getElementById('pomisResults');
+        const pomisMonthlyAmountSpan = document.getElementById('pomisMonthlyAmount');
+        const pomisTotalAmountSpan = document.getElementById('pomisTotalAmount');
+        const pomisTotalWordsSpan = document.getElementById('pomisTotalWords');
+        
+        const messageDiv = document.getElementById('message');
+
+        // Helper function to format numbers with commas
+        const formatNumber = (num) => {
+            return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // Helper function to remove commas from a string
+        const parseNumber = (str) => {
+            return parseFloat(str.replace(/,/g, ''));
+        };
+
+        // Event listener to format input fields as the user types
+        const formatInput = (inputElement) => {
+            inputElement.addEventListener('input', () => {
+                const rawValue = inputElement.value.replace(/,/g, '');
+                if (rawValue === '') {
+                    inputElement.value = '';
+                    return;
+                }
+                const numberValue = parseFloat(rawValue);
+                if (!isNaN(numberValue)) {
+                    inputElement.value = numberValue.toLocaleString('en-IN');
+                }
+                updateTotal();
+            });
+        };
+
+        // Apply the formatting to the three input fields
+        formatInput(exGrBalInput);
+        formatInput(fandFAblInput);
+        formatInput(gratInput);
+
+        function updateTotal() {
+            const exGrBal = parseNumber(exGrBalInput.value) || 0;
+            const fandFAbl = parseNumber(fandFAblInput.value) || 0;
+            const grat = parseNumber(gratInput.value) || 0;
+            const total = exGrBal + fandFAbl + grat;
+            totalAmountSpan.textContent = formatNumber(total);
+            totalAmountWordsSpan.textContent = "In words: " + numberToWordsIndian(total.toFixed(2));
+        }
+
+        // Helper function to convert a number to words in the Indian system
+        function numberToWordsIndian(num) {
+            const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const tens = ['', 'Ten', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+
+            function convertHundred(n) {
+                let res = '';
+                let temp = Math.floor(n / 100);
+                if (temp > 0) {
+                    res += units[temp] + ' Hundred ';
+                }
+                temp = n % 100;
+                if (temp > 0) {
+                    if (temp < 10) {
+                        res += units[temp];
+                    } else if (temp < 20) {
+                        res += teens[temp - 10];
+                    } else {
+                        res += tens[Math.floor(temp / 10)] + ' ' + units[temp % 10];
+                    }
+                }
+                return res.trim();
+            }
+
+            if (num === 0) return 'Zero';
+            let words = '';
+            let val = Math.floor(num);
+            let crore = Math.floor(val / 10000000);
+            let lakh = Math.floor((val % 10000000) / 100000);
+            let thousand = Math.floor((val % 100000) / 1000);
+            let hundred = val % 1000;
+
+            if (crore > 0) {
+                words += convertHundred(crore) + ' Crore ';
+            }
+            if (lakh > 0) {
+                words += convertHundred(lakh) + ' Lakh ';
+            }
+            if (thousand > 0) {
+                words += convertHundred(thousand) + ' Thousand ';
+            }
+            if (hundred > 0) {
+                words += convertHundred(hundred);
+            }
+
+            let decimalPart = Math.round((num - val) * 100);
+            if (decimalPart > 0) {
+                words += ' and ' + numberToWordsIndian(decimalPart) + ' Paisa';
+            }
+
+            return words.trim();
+        }
+
+        // Event listener for the main calculation button
+        calculateBtn.addEventListener('click', () => {
+            const P = parseNumber(totalAmountSpan.textContent) || 0;
+            const r = parseFloat(rateInput.value) / 100;
+            const startDate = new Date(startDateInput.value);
+            const today = new Date();
+
+            if (P <= 0 || isNaN(r) || r < 0 || isNaN(startDate.getTime())) {
+                showMessage("Please enter valid positive numbers for at least one amount, a valid rate, and a valid start date.");
+                return;
+            }
+            if (startDate > today) {
+                 showMessage("The start date cannot be in the future.");
+                 return;
+            }
+
+            hideAllResults();
+            hideMessage();
+
+            let n;
+            switch (compoundingSelect.value) {
+                case 'annually': n = 1; break;
+                case 'semiannually': n = 2; break;
+                case 'quarterly': n = 4; break;
+                case 'monthly': n = 12; break;
+                case 'daily': n = 365; break;
+            }
+
+            const timeDiff = today.getTime() - startDate.getTime();
+            const t = timeDiff / (1000 * 60 * 60 * 24 * 365.25);
+
+            const futureValue = P * Math.pow((1 + r / n), (n * t));
+            const interestEarned = futureValue - P;
+
+            futureValueSpan.textContent = formatNumber(futureValue);
+            interestEarnedSpan.textContent = formatNumber(interestEarned);
+            futureValueWordsSpan.textContent = "In words: " + numberToWordsIndian(futureValue.toFixed(2));
+
+            resultsDiv.classList.remove('hidden');
+        });
+        
+        // Event listener for the Monthly Withdrawal calculation button
+        calculateMonthlyBtn.addEventListener('click', () => {
+            const P = parseNumber(totalAmountSpan.textContent) || 0;
+            const r = parseFloat(rateInput.value) / 100;
+            const startDate = new Date(startDateInput.value);
+            const today = new Date();
+
+            if (P <= 0 || isNaN(r) || r < 0 || isNaN(startDate.getTime())) {
+                showMessage("Please enter valid positive numbers for amount and a valid annual rate and start date.");
+                return;
+            }
+            if (startDate > today) {
+                 showMessage("The start date cannot be in the future.");
+                 return;
+            }
+
+            hideAllResults();
+            hideMessage();
+
+            const months = (today.getFullYear() - startDate.getFullYear()) * 12 + (today.getMonth() - startDate.getMonth());
+            
+            const monthlyWithdrawal = (P * r) / 12;
+            const totalInterest = monthlyWithdrawal * months;
+
+            monthlyWithdrawalAmountSpan.textContent = formatNumber(monthlyWithdrawal);
+            totalInterestEarnedSpan.textContent = formatNumber(totalInterest);
+            totalInterestWordsSpan.textContent = "In words: " + numberToWordsIndian(totalInterest.toFixed(2));
+
+            monthlyResultsDiv.classList.remove('hidden');
+        });
+
+        // Event listener for the new POMIS calculation button
+        calculatePomisBtn.addEventListener('click', () => {
+            const P = parseNumber(totalAmountSpan.textContent) || 0;
+            const pomisAnnualRate = 0.074; // 7.4% annual rate
+            const startDate = new Date(startDateInput.value);
+            const today = new Date();
+
+            if (P <= 0 || isNaN(startDate.getTime())) {
+                showMessage("Please enter valid positive numbers for at least one amount and a valid start date.");
+                return;
+            }
+            if (startDate > today) {
+                 showMessage("The start date cannot be in the future.");
+                 return;
+            }
+
+            hideAllResults();
+            hideMessage();
+
+            const months = (today.getFullYear() - startDate.getFullYear()) * 12 + (today.getMonth() - startDate.getMonth());
+            
+            const pomisMonthlyInterest = (P * pomisAnnualRate) / 12;
+            const pomisTotalInterest = pomisMonthlyInterest * months;
+
+            pomisMonthlyAmountSpan.textContent = formatNumber(pomisMonthlyInterest);
+            pomisTotalAmountSpan.textContent = formatNumber(pomisTotalInterest);
+            pomisTotalWordsSpan.textContent = "In words: " + numberToWordsIndian(pomisTotalInterest.toFixed(2));
+
+            pomisResultsDiv.classList.remove('hidden');
+        });
+
+        // Helper function to hide all result sections
+        function hideAllResults() {
+            resultsDiv.classList.add('hidden');
+            monthlyResultsDiv.classList.add('hidden');
+            pomisResultsDiv.classList.add('hidden');
+        }
+
+        // Helper function to show a message
+        function showMessage(msg) {
+            messageDiv.textContent = msg;
+            messageDiv.classList.remove('hidden');
+            hideAllResults();
+        }
+
+        // Helper function to hide the message
+        function hideMessage() {
+            messageDiv.classList.add('hidden');
+        }
+    </script>
+
+</body>
+</html>
